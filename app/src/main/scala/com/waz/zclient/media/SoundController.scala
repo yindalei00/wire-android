@@ -55,8 +55,16 @@ class SoundController(implicit inj: Injector, cxt: Context) extends Injectable {
   }
 
   //no vibration needed here
+  //TODO - there seems to be a race condition somewhere, where this method is called while isVideo is incorrect
+  //This leads to the case where one of the media files starts playing, and we never receive the stop for it. Always ensuring
+  //that both files stops is a fix for the symptom, but not the root cause - which could be affecting other things...
   def setOutgoingRingTonePlaying(play: Boolean, isVideo: Boolean = false) =
-    setMediaPlaying(if (isVideo) R.raw.ringing_from_me_video else R.raw.ringing_from_me, play)
+    if (play) {
+      setMediaPlaying(if (isVideo) R.raw.ringing_from_me_video else R.raw.ringing_from_me, play = true)
+    } else {
+      setMediaPlaying(R.raw.ringing_from_me_video, play = false)
+      setMediaPlaying(R.raw.ringing_from_me, play = false)
+    }
 
   def playCallEstablishedSound() = {
     setMediaPlaying(R.raw.ready_to_talk)
