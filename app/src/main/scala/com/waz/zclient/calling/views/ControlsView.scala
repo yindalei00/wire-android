@@ -27,7 +27,6 @@ import android.view.View.GONE
 import android.view._
 import android.widget.{FrameLayout, LinearLayout}
 import com.facebook.rebound._
-import com.waz.ZLog
 import com.waz.api.VideoSendState._
 import com.waz.api.impl.AccentColor
 import com.waz.model.AssetData
@@ -44,11 +43,10 @@ import com.waz.zclient.ui.calling.CallControlButtonView
 import com.waz.zclient.ui.text.TypefaceFactory
 import com.waz.zclient.ui.utils.{ResourceUtils, TypefaceUtils}
 import com.waz.zclient.{R, ViewHelper}
+import com.waz.ZLog.ImplicitTag._
 
 
 class ControlsView(val context: Context, val attrs: AttributeSet, val defStyleAttr: Int) extends FrameLayout(context, attrs, defStyleAttr) with ViewHelper {
-
-  implicit val logTag = ZLog.logTagFor[ControlsView]
 
   import com.waz.zclient.utils.RichView
 

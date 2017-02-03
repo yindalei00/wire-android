@@ -28,6 +28,7 @@ import com.waz.zclient.messages.parts.ChatheadsRecyclerView
 import com.waz.zclient.utils.ContextUtils._
 import com.waz.zclient.utils._
 import com.waz.zclient.{R, ViewHelper}
+import com.waz.ZLog.ImplicitTag._
 
 class LikeDetailsView(context: Context, attrs: AttributeSet, style: Int) extends LinearLayout(context, attrs, style) with ViewHelper {
   import LikeDetailsView._

@@ -26,7 +26,6 @@ import android.view.{LayoutInflater, MenuItem, View, ViewGroup}
 import android.widget.TextView
 import com.waz.ZLog._
 import com.waz.api.Message
-import com.waz.model.AssetId
 import com.waz.threading.Threading
 import com.waz.utils.events.Signal
 import com.waz.zclient.conversation.CollectionAdapter.AdapterState

@@ -36,6 +36,7 @@ import com.waz.zclient.utils.Offset
 import com.waz.zclient.views.ImageAssetDrawable.{RequestBuilder, ScaleType, State}
 import com.waz.zclient.views.ImageController._
 import com.waz.zclient.{Injectable, Injector}
+import com.waz.ZLog.ImplicitTag._
 
 //TODO could merge with logic from the ChatheadView to make a very general drawable for our app
 class ImageAssetDrawable(

@@ -28,6 +28,7 @@ import com.waz.zclient.controllers.global.AccentColorController
 import com.waz.zclient.ui.utils.ColorUtils
 import com.waz.zclient.utils.ContextUtils._
 import com.waz.zclient.{Injectable, Injector, R}
+import com.waz.ZLog.ImplicitTag._
 
 import scala.concurrent.duration._
 

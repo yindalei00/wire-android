@@ -28,6 +28,7 @@ import com.waz.zclient.pages.main.conversationpager.controller.{ISlidingPaneCont
 import com.waz.zclient.utils.ViewUtils
 import com.waz.zclient.{Injectable, Injector}
 import org.threeten.bp.Instant
+import com.waz.ZLog.ImplicitTag._
 
 class MessagesController()(implicit injector: Injector, ev: EventContext) extends Injectable {
   import com.waz.threading.Threading.Implicits.Background

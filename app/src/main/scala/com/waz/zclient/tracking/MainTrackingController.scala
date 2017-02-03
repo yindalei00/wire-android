@@ -31,6 +31,7 @@ import com.waz.zclient.messages.controllers.MessageActionsController
 import com.waz.zclient.pages.main.conversation.views.MessageBottomSheetDialog.MessageAction
 import com.waz.zclient.{Injectable, Injector}
 import org.threeten.bp.Duration
+import com.waz.ZLog.ImplicitTag._
 
 import scala.concurrent.Future
 

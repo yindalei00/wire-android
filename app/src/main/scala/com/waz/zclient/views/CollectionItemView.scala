@@ -26,6 +26,7 @@ import android.view.HapticFeedbackConstants
 import android.view.View.OnClickListener
 import android.webkit.URLUtil
 import android.widget.TextView
+import com.waz.ZLog.ImplicitTag._
 import com.waz.api.impl.AccentColor
 import com.waz.model._
 import com.waz.service.ZMessaging
@@ -38,7 +39,7 @@ import com.waz.zclient.messages.MessageView.MsgBindOptions
 import com.waz.zclient.messages.controllers.MessageActionsController
 import com.waz.zclient.messages.parts.WebLinkPartView
 import com.waz.zclient.messages.parts.assets.FileAssetPartView
-import com.waz.zclient.messages.{ClickableViewPart, MessageViewPart, MsgPart}
+import com.waz.zclient.messages.{ClickableViewPart, MsgPart}
 import com.waz.zclient.pages.main.conversation.views.AspectRatioImageView
 import com.waz.zclient.utils.ZTimeFormatter._
 import com.waz.zclient.utils.{ViewUtils, _}

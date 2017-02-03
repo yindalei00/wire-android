@@ -19,6 +19,7 @@ package com.waz.zclient.utils.events
 
 import com.waz.threading.Threading
 import com.waz.utils.events._
+import com.waz.ZLog.ImplicitTag._
 
 // TODO consider moving to the rest of the signals package
 /**

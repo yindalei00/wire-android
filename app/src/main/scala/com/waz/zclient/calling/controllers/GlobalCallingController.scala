@@ -21,6 +21,7 @@ import _root_.com.waz.api.VoiceChannelState._
 import _root_.com.waz.service.ZMessaging
 import _root_.com.waz.utils.events.{EventContext, Signal}
 import android.os.PowerManager
+import com.waz.ZLog.ImplicitTag._
 import com.waz.api.{IConversation, KindOfCall, VoiceChannelState}
 import com.waz.model.{UserId, VoiceChannelData}
 import com.waz.service.call.CallInfo
@@ -131,8 +132,16 @@ class GlobalCallingController(implicit inj: Injector, cxt: WireContext, eventCon
 
   def wasUiActiveOnCallStart = _wasUiActiveOnCallStart
 
+  val lifecycleState = (for {
+    zms <- zmsOpt
+    active <- zms match {
+      case Some(z) => z.lifecycle.uiActive
+      case _ => Signal.const(false)
+    }
+  } yield active).disableAutowiring()
+
   val onCallStarted = activeCall.onChanged.filter(_ == true).map { _ =>
-    val active = zmsOpt.flatMap(_.fold(Signal.const(false))(_.lifecycle.uiActive)).currentValue.getOrElse(false)
+    val active = lifecycleState.currentValue.getOrElse(false)
     _wasUiActiveOnCallStart = active
     active
   }

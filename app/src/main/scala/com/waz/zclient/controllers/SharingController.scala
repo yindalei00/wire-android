@@ -25,7 +25,6 @@ import android.text.format.Formatter
 import com.waz.api._
 import com.waz.model.ConvId
 import com.waz.service.ZMessaging
-import com.waz.threading.Threading
 import com.waz.utils.events.{EventContext, EventStream, Signal}
 import com.waz.zclient.controllers.SharingController.{FileContent, ImageContent, SharableContent, TextContent}
 import com.waz.zclient.utils.{IntentUtils, ViewUtils}

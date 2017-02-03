@@ -46,6 +46,7 @@ import com.waz.zclient.utils.ViewUtils
 import com.waz.zclient.views.ImageAssetDrawable
 import com.waz.zclient.views.ImageController.WireImage
 import com.waz.zclient.views.images.TouchImageView
+import com.waz.ZLog.ImplicitTag._
 
 import scala.collection.mutable
 

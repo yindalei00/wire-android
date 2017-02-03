@@ -25,7 +25,7 @@ import android.util.AttributeSet
 import android.view.View
 import android.view.View.MeasureSpec
 import android.view.View.MeasureSpec.{EXACTLY, makeMeasureSpec}
-import com.waz.ZLog
+import com.waz.ZLog.ImplicitTag._
 import com.waz.api.User.ConnectionStatus
 import com.waz.api.User.ConnectionStatus._
 import com.waz.api.impl.AccentColor
@@ -235,8 +235,6 @@ protected class ChatheadController(val setSelectable: Boolean = false,
                                              val border: Option[Border] = None,
                                              val contactBackgroundColor: ColorVal = ColorVal(Color.GRAY))
                                             (implicit inj: Injector, eventContext: EventContext) extends Injectable {
-
-  private implicit val logtag = ZLog.logTagFor[ChatheadController]
 
   val zMessaging = inject[Signal[ZMessaging]]
 
