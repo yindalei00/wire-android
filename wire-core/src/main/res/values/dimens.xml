@@ -169,6 +169,7 @@
     <dimen name="wire__padding__18">18dp</dimen>
     <dimen name="wire__padding__20">20dp</dimen>
     <dimen name="wire__padding__26">26dp</dimen>
+    <dimen name="wire__padding__28">26dp</dimen>
     <dimen name="wire__padding__32">32dp</dimen>
     <dimen name="wire__padding__regular">16dp</dimen>
     <dimen name="wire__padding__call">18dp</dimen>
@@ -820,8 +821,16 @@
     <dimen name="collections__small_item_view_height">64dp</dimen>
     <dimen name="collections__item_top_margin">2dp</dimen>
     <dimen name="collections__web_preview_image_size">40dp</dimen>
-    <dimen name="collections__multi_share_footer_height">50dp</dimen>
+    <dimen name="collections__multi_share_search_height">32dp</dimen>
+    <dimen name="collections__multi_share_footer_height">56dp</dimen>
+    <dimen name="collections__multi_share__image_preview__height">200dp</dimen>
+    <dimen name="collections__multi_share__text_preview__height">80dp</dimen>
+    <dimen name="collections__multi_share__file_preview__height">80dp</dimen>
     <dimen name="collections__item_inner_padding">16dp</dimen>
     <dimen name="collections__small_text_line_size">8dp</dimen>
     <dimen name="collections__small_text_height">12dp</dimen>
+
+    <dimen name="share_extension__preview__card_radius">4dp</dimen>
+    <dimen name="share_extension__preview__card_elevation">10dp</dimen>
+    <dimen name="share_extension__row__checkbox_size">24dp</dimen>
 </resources>

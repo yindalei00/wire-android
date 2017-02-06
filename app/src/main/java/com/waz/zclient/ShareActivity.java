@@ -92,7 +92,8 @@ public class ShareActivity extends BaseActivity implements SharingConversationLi
 
     @Override
     protected void onNewIntent(Intent intent) {
-        //do nothing
+        setIntent(intent);
+        handleIncomingIntent();
     }
 
     @Override
@@ -228,6 +229,8 @@ public class ShareActivity extends BaseActivity implements SharingConversationLi
     public void onForceClientUpdate() {
 
     }
+
+
 
     private SharingController getSharingController() {
         return injectJava(SharingController.class);

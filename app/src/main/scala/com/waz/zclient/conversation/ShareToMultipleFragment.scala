@@ -18,31 +18,41 @@
 package com.waz.zclient.conversation
 
 import android.content.Context
+import android.graphics.{Color, PorterDuff}
 import android.os.Bundle
+import android.support.v4.content.ContextCompat
 import android.support.v7.widget.RecyclerView.ViewHolder
-import android.support.v7.widget.{LinearLayoutManager, RecyclerView, Toolbar}
+import android.support.v7.widget.{LinearLayoutManager, RecyclerView}
+import android.text.format.Formatter
+import android.text.{Editable, TextWatcher}
 import android.view.View.OnClickListener
 import android.view._
 import android.widget.LinearLayout.LayoutParams
 import android.widget._
-import com.waz.api._
+import com.waz.api
+import com.waz.api.AssetFactory
 import com.waz.model.ConversationData.ConversationType
 import com.waz.model.{MessageContent => _, _}
 import com.waz.service.ZMessaging
 import com.waz.threading.Threading
 import com.waz.utils.events.{EventContext, EventStream, Signal, SourceSignal}
 import com.waz.zclient._
+import com.waz.zclient.controllers.SharingController.{FileContent, ImageContent, TextContent}
 import com.waz.zclient.controllers.global.AccentColorController
 import com.waz.zclient.controllers.{AssetsController, SharingController}
-import com.waz.zclient.messages.MessagesController
+import com.waz.zclient.messages.{MessagesController, UsersController}
 import com.waz.zclient.pages.BaseFragment
-import com.waz.zclient.pages.main.pickuser.views.SearchBoxView
-import com.waz.zclient.pages.main.pickuser.views.SearchBoxView.Callback
-import com.waz.zclient.ui.text.TypefaceTextView
-import com.waz.zclient.ui.utils.KeyboardUtils
+import com.waz.zclient.ui.text.{TypefaceEditText, TypefaceTextView}
+import com.waz.zclient.ui.utils.ColorUtils
 import com.waz.zclient.ui.views.CursorIconButton
 import com.waz.zclient.utils.ViewUtils
 import com.waz.ZLog.ImplicitTag._
+import com.waz.zclient.views.BlurredImageAssetDrawable
+import com.waz.zclient.views.ImageAssetDrawable.{RequestBuilder, ScaleType}
+import com.waz.zclient.views.ImageController.{ImageSource, WireImage}
+
+import scala.util.Success
+
 
 class ShareToMultipleFragment extends BaseFragment[ShareToMultipleFragment.Container] with FragmentHelper {
 
@@ -51,50 +61,83 @@ class ShareToMultipleFragment extends BaseFragment[ShareToMultipleFragment.Conta
   lazy val messagesController = inject[MessagesController]
   lazy val accentColorController = inject[AccentColorController]
   lazy val sharingController = inject[SharingController]
+  lazy val usersController = inject[UsersController]
 
   override def onCreateView(inflater: LayoutInflater, container: ViewGroup, savedInstanceState: Bundle): View = {
     val view = inflater.inflate(R.layout.fragment_collection_share, container, false)
     val listView = ViewUtils.getView(view, R.id.lv__conversation_list).asInstanceOf[RecyclerView]
     val sendButton = ViewUtils.getView(view, R.id.cib__send_button).asInstanceOf[CursorIconButton]
-    val toolbar = ViewUtils.getView(view, R.id.t_toolbar).asInstanceOf[Toolbar]
-    val searchBox = ViewUtils.getView(view, R.id.multi_share_search_box).asInstanceOf[SearchBoxView]
+    val searchBox = ViewUtils.getView(view, R.id.multi_share_search_box).asInstanceOf[TypefaceEditText]
+    val contentLayout = ViewUtils.getView(view, R.id.content_container).asInstanceOf[RelativeLayout]
+    val profileImageView = ViewUtils.getView(view, R.id.user_photo).asInstanceOf[ImageView]
     val onClickEvent = EventStream[Unit]()
     val filterText = Signal[String]("")
     val adapter = new ShareToMultipleAdapter(getContext, filterText)
+    val darkenColor: Int = ColorUtils.injectAlpha(0.4f, Color.BLACK)
 
-    searchBox.setHintText(getString(R.string.multi_share_search_hint))
-    searchBox.setCallback(new Callback {
-      override def onClearButton(): Unit = {
-        searchBox.reset()
-        KeyboardUtils.hideKeyboard(getContext, searchBox.getWindowToken)
-      }
-
-      override def onFocusChange(hasFocus: Boolean): Unit = {}
-
-      override def onKeyboardDoneAction(): Unit = {
-        KeyboardUtils.hideKeyboard(getContext, searchBox.getWindowToken)
-      }
-
-      override def afterTextChanged(s: String): Unit = {
-        filterText ! s
-      }
-
-      override def onRemovedTokenSpan(user: User): Unit = {}
+    val userImage = usersController.selfUserId.flatMap(usersController.user).flatMap(_.picture match {
+      case Some(assetId) => Signal.const[ImageSource](WireImage(assetId))
+      case _ => Signal.empty[ImageSource]
     })
 
-    accentColorController.accentColor.on(Threading.Ui) {
-      color =>
-        sendButton.setSolidBackgroundColor(color.getColor())
-        searchBox.setAccentColor(color.getColor())
-    }
+    sendButton.setSolidBackgroundColor(ContextCompat.getColor(getContext, R.color.light_graphite))
 
-    toolbar.setNavigationIcon(if (getControllerFactory.getThemeController.isDarkTheme) R.drawable.ic_action_close_light else R.drawable.ic_action_close_dark)
-    toolbar.setNavigationOnClickListener(new OnClickListener {
-      override def onClick(v: View): Unit = getActivity.onBackPressed()
+    profileImageView.setImageDrawable(new BlurredImageAssetDrawable(userImage, scaleType = ScaleType.CenterCrop, request = RequestBuilder.Single, blurRadius = 15, context = getContext))
+    profileImageView.setColorFilter(darkenColor, PorterDuff.Mode.DARKEN)
+
+    searchBox.addTextChangedListener(new TextWatcher {
+      override def beforeTextChanged(s: CharSequence, start: Int, count: Int, after: Int): Unit = {}
+
+      override def onTextChanged(s: CharSequence, start: Int, before: Int, count: Int): Unit = {
+        filterText ! s.toString
+      }
+
+      override def afterTextChanged(s: Editable): Unit = {}
     })
 
     listView.setLayoutManager(new LinearLayoutManager(getContext))
     listView.setAdapter(adapter)
+
+    //TODO: It's possible for an app to share multiple uris at once but we're only showing the preview for one
+    sharingController.sharableContent.on(Threading.Ui) {
+      case Some(TextContent(text)) =>
+        contentLayout.removeAllViews()
+
+        contentLayout.setLayoutParams(new LinearLayout.LayoutParams(
+          ViewGroup.LayoutParams.MATCH_PARENT,
+          getContext.getResources.getDimensionPixelSize(R.dimen.collections__multi_share__text_preview__height)))
+
+        val contentTextView = inflater.inflate(R.layout.share_preview_text, contentLayout)
+        contentTextView.findViewById(R.id.text_content).asInstanceOf[TypefaceTextView].setText(text)
+      case Some(ImageContent(uris)) =>
+        contentLayout.removeAllViews()
+
+        contentLayout.setLayoutParams(new LinearLayout.LayoutParams(
+          ViewGroup.LayoutParams.MATCH_PARENT,
+          getContext.getResources.getDimensionPixelSize(R.dimen.collections__multi_share__image_preview__height)))
+
+        inflater.inflate(R.layout.share_preview_image, contentLayout)
+        val contentImageView = contentLayout.findViewById(R.id.image_content).asInstanceOf[ImageView]
+        contentImageView.setImageURI(uris.head)
+      case Some(FileContent(uris)) =>
+        contentLayout.removeAllViews()
+
+        contentLayout.setLayoutParams(new LinearLayout.LayoutParams(
+          ViewGroup.LayoutParams.MATCH_PARENT,
+          getContext.getResources.getDimensionPixelSize(R.dimen.collections__multi_share__file_preview__height)))
+
+        val contentView = inflater.inflate(R.layout.share_preview_file, contentLayout)
+        val assetForUpload = Option(AssetFactory.fromContentUri(uris.head).asInstanceOf[api.impl.AssetForUpload])
+        assetForUpload.foreach(_.name.onComplete{
+          case Success(Some(name)) => contentView.findViewById(R.id.file_name).asInstanceOf[TextView].setText(name)
+          case _ =>
+        }(Threading.Ui))
+        assetForUpload.foreach(_.sizeInBytes.onComplete{
+          case Success(Some(size)) => contentView.findViewById(R.id.file_info).asInstanceOf[TextView].setText(Formatter.formatFileSize(getContext, size))
+          case _ =>
+        }(Threading.Ui))
+      case _ =>
+    }
 
     onClickEvent { _ =>
       sharingController.sharableContent.on(Threading.Ui) { result =>
@@ -201,6 +244,9 @@ class SelectableConversationRow(context: Context, checkBoxListener: CompoundButt
   LayoutInflater.from(context).inflate(R.layout.row_selectable_conversation, this, true)
   val nameView = ViewUtils.getView(this, R.id.ttv__conversation_name).asInstanceOf[TypefaceTextView]
   val checkBox = ViewUtils.getView(this, R.id.rb__conversation_selected).asInstanceOf[CheckBox]
+  val buttonDrawable = ContextCompat.getDrawable(getContext, R.drawable.checkbox)
+  buttonDrawable.setLevel(1)
+  checkBox.setButtonDrawable(buttonDrawable)
 
   checkBox.setOnCheckedChangeListener(checkBoxListener)
   nameView.setOnClickListener(new OnClickListener() {

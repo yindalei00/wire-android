@@ -19,9 +19,11 @@ package com.waz.zclient.views
 
 import android.animation.ValueAnimator
 import android.animation.ValueAnimator.AnimatorUpdateListener
+import android.content.Context
 import android.graphics._
 import android.graphics.drawable.Drawable
 import android.net.Uri
+import android.renderscript.{Allocation, Element, RenderScript, ScriptIntrinsicBlur}
 import com.waz.model.AssetData.{IsImage, IsVideo}
 import com.waz.model._
 import com.waz.service.ZMessaging
@@ -226,6 +228,36 @@ class RoundedImageAssetDrawable (
     bitmapPaint.setShader(shader)
     canvas.drawRoundRect(rect, cornerRadius, cornerRadius, bitmapPaint)
   }
+}
+
+class BlurredImageAssetDrawable(
+                                 src: Signal[ImageSource],
+                                 scaleType: ScaleType = ScaleType.FitXY,
+                                 request: RequestBuilder = RequestBuilder.Regular,
+                                 background: Option[Drawable] = None,
+                                 blurRadius: Float = 0,
+                                 context: Context
+                               )(implicit inj: Injector, eventContext: EventContext) extends ImageAssetDrawable(src, scaleType, request, background) {
+
+  override protected def drawBitmap(canvas: Canvas, bm: Bitmap, matrix: Matrix, bitmapPaint: Paint): Unit = {
+    val renderScript = RenderScript.create(context)
+    val blurInput = Allocation.createFromBitmap(renderScript, bm)
+    val blurOutput = Allocation.createFromBitmap(renderScript, bm)
+
+    val blur = ScriptIntrinsicBlur.create(renderScript, Element.U8_4(renderScript))
+    blur.setInput(blurInput)
+    blur.setRadius(blurRadius)
+    blur.forEach(blurOutput)
+
+    blurOutput.copyTo(bm)
+
+    blurInput.destroy()
+    blurOutput.destroy()
+    renderScript.destroy()
+
+    canvas.drawBitmap(bm, matrix, bitmapPaint)
+  }
+
 }
 
 class ImageController(implicit inj: Injector) extends Injectable {

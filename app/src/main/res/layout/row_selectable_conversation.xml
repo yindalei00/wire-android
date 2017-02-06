@@ -25,15 +25,15 @@
               android:layout_height="@dimen/list_row_height"
               android:paddingTop="@dimen/list_tile_top_padding"
               android:paddingBottom="@dimen/list_tile_bottom_padding"
-              android:paddingLeft="@dimen/wire__padding__12"
-              android:paddingRight="@dimen/wire__padding__12">
+              android:paddingLeft="@dimen/wire__padding__16"
+              android:paddingRight="@dimen/wire__padding__16">
 
     <android.support.v7.widget.AppCompatCheckBox
         android:id="@+id/rb__conversation_selected"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="@dimen/share_extension__row__checkbox_size"
+        android:layout_height="@dimen/share_extension__row__checkbox_size"
         android:layout_gravity="center_vertical"
-        android:buttonTint="?wirePrimaryTextColor"
+        android:button="@drawable/checkbox"
         tools:targetApi="lollipop"/>
 
     <com.waz.zclient.ui.text.TypefaceTextView
@@ -41,7 +41,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center_vertical"
-        android:paddingLeft="@dimen/wire__padding__12"
+        android:paddingLeft="@dimen/wire__padding__16"
         android:textColor="?wirePrimaryTextColor"
         android:fontFamily="sans-serif-light"
         android:textSize="@dimen/list_font_size"/>
