@@ -822,7 +822,7 @@
     <dimen name="collections__item_top_margin">2dp</dimen>
     <dimen name="collections__web_preview_image_size">40dp</dimen>
     <dimen name="collections__multi_share_search_height">32dp</dimen>
-    <dimen name="collections__multi_share_footer_height">56dp</dimen>
+    <dimen name="collections__multi_share_footer_height">64dp</dimen>
     <dimen name="collections__multi_share__image_preview__height">200dp</dimen>
     <dimen name="collections__multi_share__text_preview__height">80dp</dimen>
     <dimen name="collections__multi_share__file_preview__height">80dp</dimen>
@@ -833,4 +833,5 @@
     <dimen name="share_extension__preview__card_radius">4dp</dimen>
     <dimen name="share_extension__preview__card_elevation">10dp</dimen>
     <dimen name="share_extension__row__checkbox_size">24dp</dimen>
+    <dimen name="share_extension__send_button__size">36dp</dimen>
 </resources>

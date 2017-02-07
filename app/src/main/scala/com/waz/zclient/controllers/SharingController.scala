@@ -22,6 +22,7 @@ import android.content.DialogInterface
 import android.net.Uri
 import android.support.v7.app.AlertDialog
 import android.text.format.Formatter
+import com.waz.ZLog._
 import com.waz.api._
 import com.waz.model.ConvId
 import com.waz.service.ZMessaging
@@ -35,22 +36,28 @@ import scala.concurrent.Future
 
 class SharingController(implicit injector: Injector, eventContext: EventContext) extends Injectable{
   import com.waz.threading.Threading.Implicits.Ui
+  private implicit val tag: LogTag = logTagFor[SharingController]
 
   private lazy val context = inject[Activity]
   private lazy val zms = inject[Signal[ZMessaging]]
 
   val sharableContent = Signal[Option[SharableContent]](None)
+  val ephemeralExpiration = Signal[EphemeralExpiration](EphemeralExpiration.NONE)
 
-  val sendEvent = EventStream[(SharableContent, Set[ConvId])]()
+  val sendEvent = EventStream[(SharableContent, Set[ConvId], EphemeralExpiration)]()
 
   sendEvent{
-    case (TextContent(content), conversations) =>
-      zms.head.flatMap(z => Future.traverse(conversations)( z.convsUi.sendMessage(_, new MessageContent.Text(content)) ))
-    case (FileContent(assetUris), conversations) =>
+    case (TextContent(content), conversations, expiration) =>
+      zms.head.flatMap(z => Future.traverse(conversations){ convId =>
+        z.convsUi.setEphemeral(convId, expiration).flatMap(_ =>
+          z.convsUi.sendMessage(convId, new MessageContent.Text(content))) })
+    case (FileContent(assetUris), conversations, expiration) =>
       for {
         conv <- conversations
         uri <- assetUris
-      } yield zms.head.flatMap(z => z.convsUi.sendMessage(conv, new MessageContent.Asset(AssetFactory.fromContentUri(uri), assetErrorHandler(context))))
+      } yield zms.head.flatMap(z =>
+        z.convsUi.setEphemeral(conv, expiration).flatMap(_ =>
+          z.convsUi.sendMessage(conv, new MessageContent.Asset(AssetFactory.fromContentUri(uri), assetErrorHandler(context)))))
     case _ =>
   }
 
@@ -77,31 +84,37 @@ class SharingController(implicit injector: Injector, eventContext: EventContext)
     }
   }
 
-  def onContentShared(activity: Activity, sharableContent: SharableContent, convIds: Set[ConvId]): Unit ={
-    val javaConvIds = convIds.toSeq.map(_.str).asJava
-    sharableContent match {
-      case TextContent(text) =>
-        activity.startActivity(IntentUtils.getAppLaunchIntent(activity, javaConvIds, text))
-      case ImageContent(uris) =>
-        activity.startActivity(IntentUtils.getAppLaunchIntent(activity, javaConvIds, uris.asJava))
-      case FileContent(uris) =>
-        activity.startActivity(IntentUtils.getAppLaunchIntent(activity, javaConvIds, uris.asJava))
-      case _ =>
+  def onContentShared(activity: Activity, convIds: Set[ConvId]): Unit ={
+    for{
+      Some(content) <- sharableContent.currentValue
+      expiration <- ephemeralExpiration.currentValue
+    } yield {
+      val javaConvIds = convIds.toSeq.map(_.str).asJava
+      content match {
+        case TextContent(text) =>
+          activity.startActivity(IntentUtils.getAppLaunchIntent(activity, javaConvIds, text, expiration))
+        case ImageContent(uris) =>
+          activity.startActivity(IntentUtils.getAppLaunchIntent(activity, javaConvIds, uris.asJava, expiration))
+        case FileContent(uris) =>
+          activity.startActivity(IntentUtils.getAppLaunchIntent(activity, javaConvIds, uris.asJava, expiration))
+        case _ =>
+      }
     }
   }
 
   def clearSharableContent(): Unit ={
     sharableContent ! None
+    ephemeralExpiration ! EphemeralExpiration.NONE
   }
 
   //java helpers
-  def sendContent(text: String, uris: java.util.List[Uri], conversations: java.util.List[String], activity: Activity): Unit ={
+  def sendContent(text: String, uris: java.util.List[Uri], conversations: java.util.List[String], ephemeralExpiration: EphemeralExpiration, activity: Activity): Unit ={
     val convIds = conversations.asScala.filter(_ != null).map(ConvId(_)).toSet
     (Option(text), Option(uris)) match {
       case (Some(t), _) =>
-        sendEvent ! (TextContent(t), convIds)
+        sendEvent ! (TextContent(t), convIds, ephemeralExpiration)
       case (_, Some(u)) if !u.isEmpty =>
-        sendEvent ! (FileContent(uris.asScala), convIds)
+        sendEvent ! (FileContent(uris.asScala), convIds, ephemeralExpiration)
       case _ =>
     }
   }

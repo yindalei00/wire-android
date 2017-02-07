@@ -51,8 +51,7 @@
             android:id="@+id/multi_share_search_box"
             android:layout_width="match_parent"
             android:layout_height="@dimen/collections__multi_share_search_height"
-            android:background="@drawable/rounded_rectangle"
-            android:backgroundTint="@color/light_graphite_16"
+            android:background="@drawable/rounded_graphite_rectangle"
             android:layout_margin="@dimen/wire__padding__8"
             android:drawableStart="@drawable/ic_action_search_light"
             android:paddingLeft="@dimen/wire__padding__4"
@@ -61,7 +60,7 @@
             android:inputType="textNoSuggestions|textVisiblePassword"
             android:hint="@string/multi_share_search_hint"
             android:fontFamily="sans-serif-light"
-            tools:targetApi="lollipop"/>
+            />
 
         <View
             android:layout_width="match_parent"
@@ -86,8 +85,8 @@
 
             <com.waz.zclient.ui.views.CursorIconButton
                 android:id="@+id/cib__send_button"
-                android:layout_width="@dimen/cursor__menu_button__diameter"
-                android:layout_height="@dimen/cursor__menu_button__diameter"
+                android:layout_width="@dimen/share_extension__send_button__size"
+                android:layout_height="@dimen/share_extension__send_button__size"
                 android:layout_centerInParent="true"
                 android:gravity="center"
                 android:padding="@dimen/cursor__menu_button__padding"
@@ -95,7 +94,27 @@
                 android:textColor="@color/drawing__icon__text_color"
                 />
 
+            <com.waz.zclient.views.EphemeralCursorButton
+                android:id="@+id/ephemeral_toggle"
+                android:layout_width="@dimen/cursor__menu_button__diameter"
+                android:layout_height="@dimen/cursor__menu_button__diameter"
+                android:layout_alignParentEnd="true"
+                android:layout_alignParentBottom="true"
+                android:layout_marginEnd="@dimen/wire__padding__16"
+                android:layout_marginBottom="@dimen/wire__padding__16"
+                android:gravity="center"
+                android:text="@string/glyph__hourglass"
+                android:textColor="@color/white"
+                />
+
         </RelativeLayout>
+
+        <com.waz.zclient.views.AnimatedBottomContainer
+            android:id="@+id/ephemeral_container"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/extend_container_height"
+            android:visibility="gone"
+            />
 
     </LinearLayout>
 

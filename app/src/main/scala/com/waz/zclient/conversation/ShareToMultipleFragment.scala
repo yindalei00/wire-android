@@ -30,7 +30,7 @@ import android.view._
 import android.widget.LinearLayout.LayoutParams
 import android.widget._
 import com.waz.api
-import com.waz.api.AssetFactory
+import com.waz.api.{AssetFactory, EphemeralExpiration}
 import com.waz.model.ConversationData.ConversationType
 import com.waz.model.{MessageContent => _, _}
 import com.waz.service.ZMessaging
@@ -42,19 +42,20 @@ import com.waz.zclient.controllers.global.AccentColorController
 import com.waz.zclient.controllers.{AssetsController, SharingController}
 import com.waz.zclient.messages.{MessagesController, UsersController}
 import com.waz.zclient.pages.BaseFragment
-import com.waz.zclient.ui.text.{TypefaceEditText, TypefaceTextView}
+import com.waz.zclient.ui.text.{GlyphTextView, TypefaceEditText, TypefaceTextView}
 import com.waz.zclient.ui.utils.ColorUtils
 import com.waz.zclient.ui.views.CursorIconButton
 import com.waz.zclient.utils.ViewUtils
 import com.waz.ZLog.ImplicitTag._
-import com.waz.zclient.views.BlurredImageAssetDrawable
+import com.waz.zclient.pages.extendedcursor.ephemeral.EphemeralLayout
+import com.waz.zclient.views.{AnimatedBottomContainer, BlurredImageAssetDrawable, EphemeralCursorButton}
 import com.waz.zclient.views.ImageAssetDrawable.{RequestBuilder, ScaleType}
 import com.waz.zclient.views.ImageController.{ImageSource, WireImage}
 
 import scala.util.Success
 
 
-class ShareToMultipleFragment extends BaseFragment[ShareToMultipleFragment.Container] with FragmentHelper {
+class ShareToMultipleFragment extends BaseFragment[ShareToMultipleFragment.Container] with FragmentHelper with OnBackPressedListener {
 
   lazy val zms = inject[Signal[ZMessaging]]
   lazy val assetsController = inject[AssetsController]
@@ -70,6 +71,9 @@ class ShareToMultipleFragment extends BaseFragment[ShareToMultipleFragment.Conta
     val searchBox = ViewUtils.getView(view, R.id.multi_share_search_box).asInstanceOf[TypefaceEditText]
     val contentLayout = ViewUtils.getView(view, R.id.content_container).asInstanceOf[RelativeLayout]
     val profileImageView = ViewUtils.getView(view, R.id.user_photo).asInstanceOf[ImageView]
+    val bottomContainer = ViewUtils.getView(view, R.id.ephemeral_container).asInstanceOf[AnimatedBottomContainer]
+    val ephemeralToggle = ViewUtils.getView(view, R.id.ephemeral_toggle).asInstanceOf[EphemeralCursorButton]
+
     val onClickEvent = EventStream[Unit]()
     val filterText = Signal[String]("")
     val adapter = new ShareToMultipleAdapter(getContext, filterText)
@@ -140,8 +144,9 @@ class ShareToMultipleFragment extends BaseFragment[ShareToMultipleFragment.Conta
     }
 
     onClickEvent { _ =>
-      sharingController.sharableContent.on(Threading.Ui) { result =>
-        result.foreach(res => sharingController.onContentShared(getActivity, res, adapter.selectedConversations.currentValue.getOrElse(Set())))
+      val selectedConvs = adapter.selectedConversations.currentValue.getOrElse(Set())
+      if (selectedConvs.nonEmpty) {
+        sharingController.onContentShared(getActivity, adapter.selectedConversations.currentValue.getOrElse(Set()))
         Toast.makeText(getContext, R.string.multi_share_toast_sending, Toast.LENGTH_SHORT).show()
         getActivity.finish()
       }
@@ -155,7 +160,40 @@ class ShareToMultipleFragment extends BaseFragment[ShareToMultipleFragment.Conta
         onClickEvent ! (())
       }
     })
+
+    val ephemeralCallback = new EphemeralLayout.Callback(){
+      override def onEphemeralExpirationSelected(expiration: EphemeralExpiration, close: Boolean): Unit = {
+        sharingController.ephemeralExpiration ! expiration
+        ephemeralToggle.ephemeralExpiration ! expiration
+      }
+    }
+
+    ephemeralToggle.setOnClickListener(new OnClickListener{
+      override def onClick(v: View): Unit = {
+        bottomContainer.isExpanded.currentValue match {
+          case Some(true) =>
+            bottomContainer.closedAnimated()
+          case Some(false) =>
+            val ephemeralLayout = inflater.inflate(R.layout.ephemeral_keyboard_layout, null, false).asInstanceOf[EphemeralLayout]
+            sharingController.ephemeralExpiration.currentValue.foreach(ephemeralLayout.setSelectedExpiration)
+            ephemeralLayout.setCallback(ephemeralCallback)
+            bottomContainer.addView(ephemeralLayout)
+            bottomContainer.openAnimated()
+          case _ =>
+        }
+      }
+    })
+
     view
+  }
+
+  override def onBackPressed(): Boolean = {
+    val bottomContainer = ViewUtils.getView(getView, R.id.ephemeral_container).asInstanceOf[AnimatedBottomContainer]
+    if (bottomContainer.isExpanded.currentValue.exists(a => a)) {
+      bottomContainer.closedAnimated()
+      return true
+    }
+    false
   }
 }
 

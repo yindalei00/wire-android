@@ -21,6 +21,8 @@ import android.app.Activity;
 import android.content.Intent;
 import android.net.Uri;
 import android.support.annotation.Nullable;
+
+import com.waz.api.EphemeralExpiration;
 import com.waz.api.IConversation;
 import com.waz.zclient.utils.IntentUtils;
 
@@ -104,7 +106,8 @@ public class SharingController implements ISharingController {
     public void onContentShared(Activity activity, IConversation toConversation, List<Uri> sharedUris) {
         Intent i = IntentUtils.getAppLaunchIntent(activity,
                                                   toConversation == null ? null : toConversation.getId(),
-                                                  sharedUris);
+                                                  sharedUris,
+                                                  EphemeralExpiration.NONE);
         activity.startActivity(i);
     }
 

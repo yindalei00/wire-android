@@ -27,6 +27,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.text.TextUtils;
 
+import com.waz.api.EphemeralExpiration;
 import com.waz.zclient.LaunchActivity;
 import com.waz.zclient.MainActivity;
 import com.waz.zclient.PopupActivity;
@@ -57,6 +58,7 @@ public class IntentUtils {
     private static final String EXTRA_LAUNCH_CONVERSATION_MESSAGE = "EXTRA_LAUNCH_CONVERSATION_MESSAGE";
     private static final String EXTRA_LAUNCH_CONVERSATION_FILES = "EXTRA_LAUNCH_CONVERSATION_FILES";
     private static final String EXTRA_LAUNCH_START_CALL = "EXTRA_LAUNCH_START_CALL";
+    private static final String EXTRA_LAUNCH_EPHEMERAL_EXPIRATION = "EXTRA_LAUNCH_EPHEMERAL_EXPIRATION";
     public static final String LOCALYTICS_DEEPLINK_SETTINGS = "settings";
     public static final String LOCALYTICS_DEEPLINK_SEARCH = "search";
     public static final String LOCALYTICS_DEEPLINK_PROFILE = "profile";
@@ -190,31 +192,37 @@ public class IntentUtils {
 
     public static Intent getAppLaunchIntent(@NonNull Context context,
                                             List<String> conversationIds,
-                                            @Nullable String sharedText) {
+                                            @Nullable String sharedText,
+                                            EphemeralExpiration expiration) {
         Intent intent = new Intent(context, MainActivity.class);
         intent.putExtra(EXTRA_LAUNCH_FROM_SHARING, true);
         intent.putExtra(EXTRA_LAUNCH_CONVERSATION_MESSAGE, sharedText != null ? sharedText : "");
         intent.putStringArrayListExtra(EXTRA_LAUNCH_CONVERSATION_IDS, new ArrayList<>(conversationIds));
+        intent.putExtra(EXTRA_LAUNCH_EPHEMERAL_EXPIRATION, expiration.milliseconds);
         return intent;
     }
 
     public static Intent getAppLaunchIntent(@NonNull Context context,
                                                  String conversationId,
-                                                 List<Uri> sharedFiles) {
+                                                 List<Uri> sharedFiles,
+                                                 EphemeralExpiration expiration) {
         Intent intent = new Intent(context, MainActivity.class);
         intent.putExtra(EXTRA_LAUNCH_FROM_SHARING, true);
         intent.putParcelableArrayListExtra(EXTRA_LAUNCH_CONVERSATION_FILES, new ArrayList<>(sharedFiles));
         intent.putStringArrayListExtra(EXTRA_LAUNCH_CONVERSATION_IDS, new ArrayList<>(Collections.singletonList(conversationId)));
+        intent.putExtra(EXTRA_LAUNCH_EPHEMERAL_EXPIRATION, expiration.milliseconds);
         return intent;
     }
 
     public static Intent getAppLaunchIntent(@NonNull Context context,
                                             List<String> conversationIds,
-                                            List<Uri> sharedFiles) {
+                                            List<Uri> sharedFiles,
+                                            EphemeralExpiration expiration) {
         Intent intent = new Intent(context, MainActivity.class);
         intent.putExtra(EXTRA_LAUNCH_FROM_SHARING, true);
         intent.putParcelableArrayListExtra(EXTRA_LAUNCH_CONVERSATION_FILES, new ArrayList<>(sharedFiles));
         intent.putStringArrayListExtra(EXTRA_LAUNCH_CONVERSATION_IDS, new ArrayList<>(conversationIds));
+        intent.putExtra(EXTRA_LAUNCH_EPHEMERAL_EXPIRATION, expiration.milliseconds);
         return intent;
     }
 
@@ -223,7 +231,7 @@ public class IntentUtils {
     }
 
     public static Intent getAppLaunchIntent(@NonNull Context context) {
-        return getAppLaunchIntent(context, new ArrayList<String>(), (String) null);
+        return getAppLaunchIntent(context, new ArrayList<String>(), (String) null, EphemeralExpiration.NONE);
     }
 
     public static PendingIntent getNotificationAppLaunchIntent(@NonNull Context context) {
@@ -303,6 +311,10 @@ public class IntentUtils {
 
     public static List<Uri> getLaunchConversationSharedFiles(Intent intent) {
         return intent.getParcelableArrayListExtra(EXTRA_LAUNCH_CONVERSATION_FILES);
+    }
+
+    public static EphemeralExpiration getEphemeralExpiration(Intent intent) {
+        return EphemeralExpiration.getForMillis(intent.getLongExtra(EXTRA_LAUNCH_EPHEMERAL_EXPIRATION, EphemeralExpiration.NONE.milliseconds));
     }
 
     public static boolean isStartCallNotificationIntent(Intent intent) {

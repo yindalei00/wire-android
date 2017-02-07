@@ -22,6 +22,7 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.v4.app.Fragment;
 import android.support.v4.app.ShareCompat;
 import android.util.AttributeSet;
 import android.view.View;
@@ -230,7 +231,14 @@ public class ShareActivity extends BaseActivity implements SharingConversationLi
 
     }
 
-
+    @Override
+    public void onBackPressed() {
+        Fragment fragment = getSupportFragmentManager().findFragmentByTag(ShareToMultipleFragment.TAG());
+        if (fragment != null && ((ShareToMultipleFragment) fragment).onBackPressed()) {
+            return;
+        }
+        super.onBackPressed();
+    }
 
     private SharingController getSharingController() {
         return injectJava(SharingController.class);
